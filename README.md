@@ -11,7 +11,7 @@ We want to build an reinforcement learning algorithm to trade stocks with maximu
 - Temporal difference
 - Model-predictive control
 
-## Stucture of our project
+## Structure of our project
 - `data` folder holds the data we train and test on
 - `utils` contains some useful functions, i.e. to prepare data for models
 - `models` folder has subfolders dedicated to each algorithm we use
@@ -19,3 +19,11 @@ We want to build an reinforcement learning algorithm to trade stocks with maximu
 
 ## Authors
 Todo, see collaborators :D
+
+
+### For authors:
+
+1. Our actions are: sell, buy, do nothing
+2. Our environment is (vector of prices, vector of pct_changes, current day & day of week)
+3. Observation is (10 last prices, 10 last pct_changes (9 mb?), current day of week, number of stocks on agent's balance, money he has)
+3. Reward function: total cost (n_stocks*stock_price + curr_money) - start_money
