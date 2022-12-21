@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from datetime import datetime
 
 action_space = [
     -1, #sell
@@ -26,7 +27,7 @@ class Environment:
         return {'prices':self.data.iloc[index-10:index], 'money':self.money, 'stocks_num':self.stocks}
     
     
-    def reward(self, date:Datetime, action:int) -> float:
+    def reward(self, date:datetime, action:int) -> float:
         index = self.data.index[self.data['Date'] == date]
         curr_price = self.data.iloc[index][self.stock_name + '_close']
         next_price = self.data.iloc[index+1][self.stock_name + '_close']
@@ -35,7 +36,7 @@ class Environment:
         return action*delta
     
     
-    def get_possible_actions(self, date:Datetime=None, index:int=None) -> list:
+    def get_possible_actions(self, date:datetime=None, index:int=None) -> list:
         possible_actions = []
         if index is None:
             index = self.data.index[self.data['Date'] == date]
@@ -47,7 +48,7 @@ class Environment:
         return possible_actions
         
     
-    def transition(self, action, date:Datetime=None, index:int=None) -> None:
+    def transition(self, action, date:datetime=None, index:int=None) -> None:
         if index is None:
             index = self.data.index[self.data['Date'] == date]
         

@@ -9,6 +9,7 @@ def prepare_short_data(filename:str='data/returns_RU.xlsx') -> pd.DataFrame:
     df['Weekday'] = df['Date'].dt.dayofweek
     for col in df.columns[1:-1]:
         df[col+'_pct'] = df[col].pct_change()
+        df.rename(columns={col:col+'_close'}, inplace=True)
     
     return df
 
@@ -20,9 +21,9 @@ def prepare_full_data(filename:str='data/Data_RU.xlsx') -> pd.DataFrame:
     df = pd.read_excel(filename, skiprows=1, parse_dates=[0])
     df.drop([0], inplace=True)
     df['Date'] = pd.to_datetime(df['SECID'], format="%Y-%m-%d %H:%M:%S")
-    df.drop(columns=['SECID'])
+    df.drop(columns=['SECID'], inplace=True)
     
-    for col in df.columns[1:]:
+    for col in df.columns[:-1]: # except Date
         if col[-2] == '.':
             if col[-1] == '1':
                 df.rename(columns={col:col[:-2]+'_high'}, inplace=True)
@@ -34,8 +35,8 @@ def prepare_full_data(filename:str='data/Data_RU.xlsx') -> pd.DataFrame:
                 df.rename(columns={col:col[:-2]+'_volume'}, inplace=True)
         else:
             df.rename(columns={col:col+'_close'}, inplace=True)
-        
-    for col in df.columns[1:100]:
+    
+    for col in df.columns[:99]:
         col_name = col[:-6]
         df[col_name+'_D1'] = (df[col_name+'_open']-df[col_name+'_close'].shift(periods=-1))/df[col_name+'_close'].shift(periods=-1)
         df[col_name+'_D2'] = (df[col_name+'_close']-df[col_name+'_open'])/df[col_name+'_open']
