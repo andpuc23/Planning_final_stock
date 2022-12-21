@@ -22,10 +22,9 @@ def prepare_full_data(filename:str='data/Data_RU.xlsx') -> pd.DataFrame:
     df.drop([0], inplace=True)
     df['Date'] = pd.to_datetime(df['SECID'], format="%Y-%m-%d %H:%M:%S")
     df.drop(columns=['SECID'], inplace=True)
-    
     df['Weekday'] = df['Date'].dt.dayofweek
     
-    for col in df.columns[:-1]: # except Date
+    for col in df.columns[:-2]: # except Date
         if col[-2] == '.':
             if col[-1] == '1':
                 df.rename(columns={col:col[:-2]+'_high'}, inplace=True)
