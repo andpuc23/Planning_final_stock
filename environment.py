@@ -10,7 +10,7 @@ action_space = [
 
 class Environment:
     def __init__(self, data:pd.DataFrame, stock_name:str, initial_money:float):
-        self.data = data[['Date']+[col for col in data.columns if stock_name in col]]
+        self.data = data[['Date', 'Weekday']+[col for col in data.columns if stock_name in col]]
         # immutable
         self.init_money = initial_money
         self.stock_name = stock_name
