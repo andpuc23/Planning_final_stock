@@ -1,3 +1,5 @@
+import numpy as np
+
 class Base_model:
     def __init__(self):
         pass
@@ -6,4 +8,4 @@ class Base_model:
         pass
     
     def predict(self, data):
-        pass
+        return np.random.randint(-1, 2, 1)

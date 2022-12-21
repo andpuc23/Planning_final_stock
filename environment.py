@@ -18,17 +18,23 @@ class Environment:
         self.money = [initial_money]
         self.stocks = [0]
     
-    def observation(self, date):
+    def reset(self):
+        self.money = [self.init_money]
+        self.stocks = [0]
+    
+    def first_date(self):
+        return self.data['Date'].min() 
+    
+    def observation(self, index):
         '''
         provides an observation of 10 days before the date provided
         return: dict, keys: prices:pd.DataFrame, money:float, stocks_num:int
         '''
-        index = self.data.index[self.data['Date'] == date]
+        assert index >= 10
         return {'prices':self.data.iloc[index-10:index], 'money':self.money, 'stocks_num':self.stocks}
     
     
-    def reward(self, date:datetime, action:int) -> float:
-        index = self.data.index[self.data['Date'] == date]
+    def reward(self, index, action:int) -> float:
         curr_price = self.data.iloc[index][self.stock_name + '_close']
         next_price = self.data.iloc[index+1][self.stock_name + '_close']
         
@@ -36,7 +42,7 @@ class Environment:
         return action*delta
     
     
-    def get_possible_actions(self, date:datetime=None, index:int=None) -> list:
+    def get_possible_actions(self, index:int) -> list:
         possible_actions = []
         if index is None:
             index = self.data.index[self.data['Date'] == date]
@@ -48,13 +54,7 @@ class Environment:
         return possible_actions
         
     
-    def transition(self, action, date:datetime=None, index:int=None) -> None:
-        if index is None:
-            index = self.data.index[self.data['Date'] == date]
-        
-        if action == 0:
-            return
-        
+    def transition(self, action, index:int) -> None:
         self.stocks.append(self.stocks[-1]+action)
         self.money.append(self.money[-1] - action*self.data.iloc[index][self.stock_name + '_close'])
         
