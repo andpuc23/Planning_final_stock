@@ -38,6 +38,10 @@ class Environment:
         curr_price = self.data.iloc[index][self.stock_name + '_close']
         next_price = self.data.iloc[index+1][self.stock_name + '_close']
         
+        if (action == -1 and self.stocks[-1] == 0) or (action == 1 and self.money[-1] < curr_price):
+            return -1000
+        
+        
         delta = next_price - curr_price
         return action*delta
     
@@ -55,7 +59,7 @@ class Environment:
         
     
     def transition(self, action, index:int) -> None:
-        self.stocks.append(self.stocks[-1]+action)
+        self.stocks.append(self.stocks[-1]*action)
         self.money.append(self.money[-1] - action*self.data.iloc[index][self.stock_name + '_close'])
         
         
