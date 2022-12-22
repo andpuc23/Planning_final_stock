@@ -58,10 +58,19 @@ class Environment:
         assert 10 <= index <= self.data.shape[0], f'index out of range, {index}'
         prices = torch.from_numpy(self.data[self.data.columns[[1, 7, 8, 9, 10]]].iloc[index-10:index].values).float().flatten()
         if index-10 < len(self.money):
-            return {'prices':prices, 'money':self.money[index-10], 'stocks':self.stocks[index-10]}
+            return {'prices':prices, 'money':self.money[index-10], 'stocks_num':self.stocks[index-10]}
         else:
-            return {'prices':prices, 'money':self.money[-1], 'stocks':self.stocks[-1]}
+            return {'prices':prices, 'money':self.money[-1], 'stocks_num':self.stocks[-1]}
     
+    def observation_batch(self, indexes):
+        
+        new_states = torch.tensor([], dtype=torch.float)
+        
+        for index in indexes.cpu().detach().numpy().tolist():
+            new_states = torch.cat([new_states, self.observation_tensor(index)])
+            
+        new_states = new_states.reshape(len(indexes), -1)    
+        return new_states
     
     def reward(self, index, action:int) -> float:
         curr_price = self.data.iloc[index][self.stock_name + '_close']

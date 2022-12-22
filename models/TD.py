@@ -7,6 +7,7 @@ import torch
 import torch.nn as nn
 from torch.nn.parameter import Parameter
 
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 def td_transition(state, action, indexes, env):    
     action = (torch.argmax(action) - 1).numpy()
@@ -49,8 +50,8 @@ class ActorModel(nn.Module):
 class CriticModel(nn.Module):
     """Critic nn model"""
 
-    def __init__(self, critic_layer_size: int = 70,
-                       critic_in_size: int = 10, 
+    def __init__(self, critic_layer_size: int,
+                       critic_in_size: int, 
                        critic_out_size: int = 1, 
                        scale_factor: int = -5000) -> None:
         """
@@ -141,7 +142,7 @@ class ActorImprovedValue(nn.Module):
         super().__init__()
         self.critic = critic
         self.actor = actor
-        self.transition = env.transition
+        self.transition = transition
         self.env = env
         self.satellite_discount = satellite_discount
 
@@ -152,7 +153,7 @@ class ActorImprovedValue(nn.Module):
         :return: actor's improved value
         """
         action = self.actor(state)
-        next_state, reward = self.transition(state, action, indexes, self.env)
+        next_state, reward = self.transition(state, action, index_, self.env)
         improved_value = reward + self.satellite_discount * self.critic(next_state)
         return -improved_value.mean()
 
@@ -172,7 +173,7 @@ def get_random_state(batch_size: int,
     
     for index in rand_indexes:
         state_dict = env.observation(index)
-        state_array = np.concatenate([state_dict['prices'].drop(['Date'], axis=1).values.flatten(), 
+        state_array = np.hstack([state_dict['prices'],
                                       np.array(state_dict['money']),
                                       np.array(state_dict['stocks_num'])
                                      ])
