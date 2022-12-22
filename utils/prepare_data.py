@@ -20,6 +20,7 @@ def prepare_full_data(filename:str='data/Data_RU.xlsx') -> pd.DataFrame:
     """
     df = pd.read_excel(filename, skiprows=1, parse_dates=[0])
     df.drop([0], inplace=True)
+    df.dropna(axis='index', inplace=True)
     df['Date'] = pd.to_datetime(df['SECID'], format="%Y-%m-%d %H:%M:%S")
     df.drop(columns=['SECID'], inplace=True)
     df['Weekday'] = df['Date'].dt.dayofweek
@@ -43,6 +44,6 @@ def prepare_full_data(filename:str='data/Data_RU.xlsx') -> pd.DataFrame:
         df[col_name+'_D2'] = (df[col_name+'_close']-df[col_name+'_open'])/df[col_name+'_open']
         df[col_name+'_D3'] = (df[col_name+'_high']-df[col_name+'_open'])/df[col_name+'_open']
         df[col_name+'_D4'] = (df[col_name+'_open']-df[col_name+'_low'])/df[col_name+'_low']
-        
-    return df
+    
+    return df.dropna(axis='index')
         

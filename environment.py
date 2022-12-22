@@ -43,12 +43,12 @@ class Environment:
         '''
 #         print(index)
         assert 10 <= index <= self.data.shape[0], f'index out of range, {index}'
-        prices = torch.from_numpy(self.data[self.data.columns[1:]].iloc[index-10:index].values).float().flatten()
+        prices = torch.from_numpy(self.data[self.data.columns[[1, 7, 8, 9, 10]]].iloc[index-10:index].values).float().flatten()
 #         print(prices.shape[0])
         if index-10 < len(self.money):
-            return torch.hstack([prices, torch.tensor(self.money[index-10]), torch.tensor(self.stocks[index-10])])
+            return torch.hstack([prices, torch.tensor(self.money[index-10]).float(), torch.tensor(self.stocks[index-10]).float()])
         else:
-            return torch.hstack([prices, torch.tensor(self.money[-1]), torch.tensor(self.stocks[-1])])
+            return torch.hstack([prices, torch.tensor(self.money[-1]).float(), torch.tensor(self.stocks[-1]).float()])
     
     
     def observation(self, index):
@@ -58,11 +58,11 @@ class Environment:
         '''
         
         assert 10 <= index <= self.data.shape[0], f'index out of range, {index}'
-        prices = torch.from_numpy(self.data.iloc[index-10:index].values).float().flatten()
+        prices = torch.from_numpy(self.data[self.data.columns[[1, 7, 8, 9, 10]]].iloc[index-10:index].values).float().flatten()
         if index-10 < len(self.money):
-            return torch.cat([prices, self.money[index-10], self.stocks[index-10]])
+            return {'prices':prices, 'money':self.money[index-10], 'stocks':self.stocks[index-10]}
         else:
-            return torch.cat([prices, self.money[index-1], self.stocks[-1]])
+            return {'prices':prices, 'money':self.money[-1], 'stocks':self.stocks[-1]}
     
     
     def reward(self, index, action:int) -> float:
@@ -70,9 +70,21 @@ class Environment:
         next_price = self.data.iloc[index+1][self.stock_name + '_close']
         
         if (action == -1 and self.stocks[-1] == 0) or (action == 1 and self.money[-1] < curr_price):
-            return -1000
+            return -100
         
         
+        delta = next_price - curr_price
+        return action*delta
+    
+    def reward_train(self, index, action) -> float:
+        curr_price = self.data.iloc[index][self.stock_name + '_close']
+        next_price = self.data.iloc[index+1][self.stock_name + '_close']
+        
+#         if (action == -1 and self.stocks[-1] == 0) or (action == 1 and self.money[-1] < curr_price):
+#             return -1000
+        action = action.T @ torch.tensor([-1, 0, 1])
+        
+       
         delta = next_price - curr_price
         return action*delta
     
@@ -94,6 +106,12 @@ class Environment:
         self.money.append(self.money[-1] - action*self.data.iloc[index][self.stock_name + '_close'])
         
         
+    def total_cost(self):
+        costs = []
+        for i, (m, s) in enumerate(zip(self.money, self.stocks)):
+            curr_price = self.data.iloc[i+10][self.stock_name + '_close']
+            costs.append(m + s*curr_price)
+        return costs
         
         
 class MultiStockEnvironment:
