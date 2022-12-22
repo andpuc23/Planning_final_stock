@@ -96,4 +96,19 @@ class Environment:
         
         
         
+class MultiStockEnvironment:
+    def __init__(data:pd.DataFrame, stock_names:list, initial_money:float):
+        self.data = data[['Date', 'Weekday']+[col for col in data.columns if any([[stock for stock in stock_names] in col])]
+        # immutable
+        self.init_money = initial_money
+        self.stock_name = stock_name
+        self.action_space = [
+        -1, #sell
+        0,  # hold
+        1] # buy
+        self.day_count = self.data.shape[0]
         
+        #mutable
+        self.money = [initial_money]
+        self.stocks = [0]
+                         
