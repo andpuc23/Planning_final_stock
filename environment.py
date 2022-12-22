@@ -26,11 +26,10 @@ class Environment:
         self.stocks = [0]
         
         
-        
-        
     def reset(self):
         self.money = [self.init_money]
         self.stocks = [0]
+    
     
     def first_date(self):
         return self.data['Date'].min() 
@@ -55,8 +54,7 @@ class Environment:
         '''
         provides an observation of 10 days before the date provided
         return: dict, keys: prices:pd.DataFrame, money:float, stocks_num:int
-        '''
-        
+        '''  
         assert 10 <= index <= self.data.shape[0], f'index out of range, {index}'
         prices = torch.from_numpy(self.data[self.data.columns[[1, 7, 8, 9, 10]]].iloc[index-10:index].values).float().flatten()
         if index-10 < len(self.money):
@@ -70,11 +68,21 @@ class Environment:
         next_price = self.data.iloc[index+1][self.stock_name + '_close']
         
         if (action == -1 and self.stocks[-1] == 0) or (action == 1 and self.money[-1] < curr_price):
-            return -100
-        
-        
+            return -1000
+            
         delta = next_price - curr_price
         return action*delta
+    
+    
+    def reward_batch(self, indexes, action:int):
+        rewards = []
+        
+        for index in indexes.cpu().detach().numpy().tolist():
+            rewards.append(self.reward(index, action))
+            
+        rewards = torch.tensor(rewards, dtype=torch.float)
+        return rewards
+    
     
     def reward_train(self, index, action) -> float:
         curr_price = self.data.iloc[index][self.stock_name + '_close']
@@ -104,6 +112,12 @@ class Environment:
     def transition(self, index:int, action) -> None:
         self.stocks.append(self.stocks[-1]+action)
         self.money.append(self.money[-1] - action*self.data.iloc[index][self.stock_name + '_close'])
+    
+    
+    def transition_batch(self, action, indexes:int) -> None:
+        new_states = self.observation_batch(indexes)
+        rewards = self.reward_batch(indexes, action)
+        return new_states, rewards
         
         
     def total_cost(self):
@@ -114,7 +128,7 @@ class Environment:
         return costs
         
         
-class MultiStockEnvironment:
+class MultiStockEnvironment: # dunno if we need it
     def __init__(data:pd.DataFrame, stock_names:list, initial_money:float):
         self.data = data[
             ['Date', 'Weekday']+[col for col in data.columns if any([[stock for stock in stock_names] in col])]]
