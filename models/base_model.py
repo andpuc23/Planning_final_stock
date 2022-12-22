@@ -5,7 +5,13 @@ class Base_model:
         pass
     
     def fit(self, data):
+        print('called base_model.fit(data), did nothing')
+        pass
+    
+    def fit(self, state, action, reward):
+        print('called base_model.fit(state, action, reward), did nothing')
         pass
     
     def predict(self, data):
         return np.random.randint(-1, 2, 1)
+    

@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from datetime import datetime
+import torch
 
 action_space = [
     -1, #sell
@@ -14,10 +15,19 @@ class Environment:
         # immutable
         self.init_money = initial_money
         self.stock_name = stock_name
+        self.action_space = [
+        -1, #sell
+        0,  # hold
+        1] # buy
+        self.day_count = self.data.shape[0]
+        
         #mutable
         self.money = [initial_money]
         self.stocks = [0]
-    
+        
+        
+        
+        
     def reset(self):
         self.money = [self.init_money]
         self.stocks = [0]
@@ -25,13 +35,34 @@ class Environment:
     def first_date(self):
         return self.data['Date'].min() 
     
+    
+    def observation_tensor(self, index):
+        '''
+        provides an observation of 10 days before the date provided
+        return: tensor( prices as vector, money:float, stocks_num:int)
+        '''
+#         print(index)
+        assert 10 <= index <= self.data.shape[0], f'index out of range, {index}'
+        prices = torch.from_numpy(self.data[self.data.columns[1:]].iloc[index-10:index].values).float().flatten()
+#         print(prices.shape[0])
+        if index-10 < len(self.money):
+            return torch.hstack([prices, torch.tensor(self.money[index-10]), torch.tensor(self.stocks[index-10])])
+        else:
+            return torch.hstack([prices, torch.tensor(self.money[-1]), torch.tensor(self.stocks[-1])])
+    
+    
     def observation(self, index):
         '''
         provides an observation of 10 days before the date provided
         return: dict, keys: prices:pd.DataFrame, money:float, stocks_num:int
         '''
-        assert index >= 10
-        return {'prices':self.data.iloc[index-10:index], 'money':self.money, 'stocks_num':self.stocks}
+        
+        assert 10 <= index <= self.data.shape[0], f'index out of range, {index}'
+        prices = torch.from_numpy(self.data.iloc[index-10:index].values).float().flatten()
+        if index-10 < len(self.money):
+            return torch.cat([prices, self.money[index-10], self.stocks[index-10]])
+        else:
+            return torch.cat([prices, self.money[index-1], self.stocks[-1]])
     
     
     def reward(self, index, action:int) -> float:
@@ -58,8 +89,8 @@ class Environment:
         return possible_actions
         
     
-    def transition(self, action, index:int) -> None:
-        self.stocks.append(self.stocks[-1]*action)
+    def transition(self, index:int, action) -> None:
+        self.stocks.append(self.stocks[-1]+action)
         self.money.append(self.money[-1] - action*self.data.iloc[index][self.stock_name + '_close'])
         
         
