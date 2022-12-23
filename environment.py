@@ -106,6 +106,15 @@ class Environment:
         return action*delta
     
     
+    def get_possible_actions_custom(self, st_index:int, money_index:int = 0) -> list:
+        possible_actions = []
+        if self.data.iloc[st_index][self.stock_name + '_close'] <= self.money[money_index]:
+            possible_actions.append(1)
+        possible_actions.append(0) # we can skip in any case
+        if self.stocks[money_index] > 0:
+            possible_actions.append(-1)
+        return possible_actions
+    
     def get_possible_actions(self, index:int) -> list:
         possible_actions = []
         if index is None:

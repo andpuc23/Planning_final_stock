@@ -231,7 +231,59 @@ def actor_epoch(optimizer: torch.optim.Optimizer,
     return values
 
 
-    
-    
-    
-    
+class TD:
+    def __init__(self, layer_size, env,
+                model_iterations=2000,
+                batch_size=32,
+                epochs=5):
+        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        self.env = env
+        self.actor = ActorModel(
+            actor_in_size=env.observation_tensor(15).shape[0],
+            actor_layer_size=layer_size).to(device)
+        self.critic = CriticModel(
+            critic_in_size=env.observation_tensor(15).shape[0], 
+                            critic_layer_size=layer_size).to(device)
+
+        self.critic_temporal_difference = CriticTD(self.actor, self.critic, self.env).to(self.device)
+        self.actor_improved_value = ActorImprovedValue(self.actor, self.critic, self.env).to(self.device)
+        
+        
+        self.optimizer_critic_kind = torch.optim.Adam
+        self.optimizer_critic_parameters = {
+            'lr': 5e-6,
+            'weight_decay': 1e-5
+        }
+
+        self.optimizer_actor_kind = torch.optim.Adam
+        self.optimizer_actor_parameters = {
+            "lr" : 1e-4,
+            "weight_decay" : 1e-5
+        }
+
+        self.iterations = model_iterations
+        self.batch_size = batch_size
+        
+        self.epochs = epochs
+        
+        
+        
+    def fit(self):
+        optimizer_actor = self.optimizer_actor_kind(self.actor_improved_value.parameters(), **self.optimizer_actor_parameters)
+
+        for _ in tqdm(range(self.epochs), "Actor-Critic learning", leave=False):
+            optimizer_critic = self.optimizer_critic_kind(self.critic_temporal_difference.parameters(), **self.optimizer_critic_parameters)
+            losses = np.array(critic_epoch(optimizer_critic,
+                                   self.critic_temporal_difference,
+                                   self.iterations,
+                                   self.env,
+                                   self.batch_size))
+            actor_epoch(optimizer_actor,
+                self.actor_improved_value,
+                self.iterations,
+                self.env,
+                self.batch_size)
+
+            
+    def predict(self, obs):
+        return torch.argmax(self.actor(obs))-1
