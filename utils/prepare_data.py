@@ -19,6 +19,8 @@ def prepare_full_data(filename:str='data/Data_RU.xlsx') -> pd.DataFrame:
     returns filled dataframe
     """
     df = pd.read_excel(filename, skiprows=1, parse_dates=[0])
+    df = df.loc[:, (df.isnull().sum(axis=0) <= 0.1*df.shape[0])]
+    
     df.drop([0], inplace=True)
     df.dropna(axis='index', inplace=True)
     df['Date'] = pd.to_datetime(df['SECID'], format="%Y-%m-%d %H:%M:%S")
@@ -37,8 +39,8 @@ def prepare_full_data(filename:str='data/Data_RU.xlsx') -> pd.DataFrame:
                 df.rename(columns={col:col[:-2]+'_volume'}, inplace=True)
         else:
             df.rename(columns={col:col+'_close'}, inplace=True)
-    
-    for col in df.columns[:99]:
+#     print(df.columns)
+    for col in df.columns[:(len(df.columns)-2)//5]:
         col_name = col[:-6]
         df[col_name+'_D1'] = (df[col_name+'_open']-df[col_name+'_close'].shift(periods=-1))/df[col_name+'_close'].shift(periods=-1)
         df[col_name+'_D2'] = (df[col_name+'_close']-df[col_name+'_open'])/df[col_name+'_open']

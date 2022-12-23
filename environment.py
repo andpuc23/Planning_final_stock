@@ -136,6 +136,8 @@ class Environment:
             costs.append(m + s*curr_price)
         return costs
         
+    def stock_cost(self):
+        return self.data.iloc[10:][self.stock_name + '_close'].values
         
 class MultiStockEnvironment: # dunno if we need it
     def __init__(data:pd.DataFrame, stock_names:list, initial_money:float):

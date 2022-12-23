@@ -55,7 +55,11 @@ class Network(nn.Module):
         self.layers = nn.Sequential(
             nn.Linear(n_observations, 128),
             nn.ReLU(),
-            nn.Linear(128, 128),
+            nn.Linear(128, 512),
+            nn.ReLU(),
+            nn.Linear(512, 512),
+            nn.ReLU(),
+            nn.Linear(512, 128),
             nn.ReLU(),
             nn.Linear(128, n_actions),
             nn.Softmax()

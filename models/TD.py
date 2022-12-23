@@ -19,7 +19,7 @@ class ActorModel(nn.Module):
     """Actor nn model"""
 
     def __init__(self, 
-                 actor_layer_size: int = 100, 
+                 actor_layer_size: int,
                  actor_in_size: int = 10, 
                  actor_out_size: int = 3, 
                 ) -> None:
@@ -32,9 +32,13 @@ class ActorModel(nn.Module):
         super().__init__()
         self.actor = nn.Sequential(
             torch.nn.Linear(actor_in_size, actor_layer_size),
-            torch.nn.LeakyReLU(),
+            torch.nn.ReLU(),
             torch.nn.Linear(actor_layer_size, actor_layer_size),
-            torch.nn.LeakyReLU(),
+            torch.nn.ReLU(),
+            torch.nn.Linear(actor_layer_size, actor_layer_size),
+            torch.nn.ReLU(),
+            torch.nn.Linear(actor_layer_size, actor_layer_size),
+            torch.nn.ReLU(),
             torch.nn.Linear(actor_layer_size, actor_out_size),
         )
 
@@ -53,7 +57,8 @@ class CriticModel(nn.Module):
     def __init__(self, critic_layer_size: int,
                        critic_in_size: int, 
                        critic_out_size: int = 1, 
-                       scale_factor: int = -5000) -> None:
+                       scale_factor: int = -5000
+                ) -> None:
         """
         Constructor
         :param critic_layer_size: hidden critic's size
@@ -62,13 +67,17 @@ class CriticModel(nn.Module):
         super().__init__()
         self.critic = torch.nn.Sequential(
             torch.nn.Linear(critic_in_size, critic_layer_size),
-            torch.nn.LeakyReLU(),
+            torch.nn.ReLU(),
             torch.nn.Linear(critic_layer_size, critic_layer_size),
-            torch.nn.LeakyReLU(),
+            torch.nn.ReLU(),
+            torch.nn.Linear(critic_layer_size, critic_layer_size),
+            torch.nn.ReLU(),
+            torch.nn.Linear(critic_layer_size, critic_layer_size),
+            torch.nn.ReLU(),
             torch.nn.Linear(critic_layer_size, critic_out_size)
         )
         self.act = torch.nn.Tanh()
-        self.scale_factor = scale_factor
+#         self.scale_factor = scale_factor
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
@@ -78,7 +87,7 @@ class CriticModel(nn.Module):
         x = self.critic(x)
         x = -(x ** 2)
         x = self.act(x)
-        return x * self.scale_factor
+        return x #* self.scale_factor
     
     
 class CriticTD(nn.Module):
